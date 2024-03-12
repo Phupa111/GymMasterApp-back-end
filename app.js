@@ -5,9 +5,11 @@ const app = express();
 app.use(express.json());
 app.use(bodyParser.urlencoded({extended:true}));
 
-const usersRoute = require('./routes/Users.js')
+const usersRoute = require('./routes/Users.js');
+const photoRoute = require('./routes/Photo.js');
 
 app.use('/user',usersRoute);
+app.use("/photo",photoRoute);
 
 app.get('/hello',(req, res )=>{
   res.send("hello world");
