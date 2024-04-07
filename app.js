@@ -8,6 +8,7 @@ app.use(bodyParser.urlencoded({extended:true}));
 const usersRoute = require('./routes/Users.js');
 const photoRoute = require('./routes/Photo.js');
 
+
 app.use('/user',usersRoute);
 app.use("/photo",photoRoute);
 
