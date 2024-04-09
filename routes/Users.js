@@ -101,12 +101,17 @@ route.post('/register', async (req, res) => {
 });
 
 route.get('/selectFromEmail/:email', async (req, res) => {
-    const email = req.params.email; // ดึงค่า email จาก route parameter
+    const email = req.params.email; // Extract email from route parameter
     let conn;
     try {
         conn = await pool.getConnection();
         const rows = await conn.query("SELECT * FROM User WHERE email = ?", [email]);
-        res.status(200).json(rows);
+        if (rows.length > 0) {
+            const user = rows[0]; // Assuming you want to send the first user if found
+            res.status(200).json({ user });
+        } else {
+            res.status(404).json({ error: 'User not found' });
+        }
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
@@ -116,6 +121,7 @@ route.get('/selectFromEmail/:email', async (req, res) => {
         }
     }
 });
+
 
 
 module.exports = route;
