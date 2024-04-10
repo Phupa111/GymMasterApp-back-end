@@ -67,7 +67,7 @@ route.post('/login', async (req, res) => {
 });
 
 route.post('/register', async (req, res) => {
-    const { username, email, password, height, birthday, gender, profile_pic, day_success_exerice, role } = req.body;
+    const { username, email, password, height, birthday, gender, profile_pic, day_success_exerice, role,isDisbel } = req.body;
 
     let conn;
     try {
@@ -87,8 +87,8 @@ route.post('/register', async (req, res) => {
         const hashedPassword = await bcrypt.hash(password, 10);
         const daySuccessExerciseValue = day_success_exerice !== null ? day_success_exerice : 0;
         const result = await conn.query(
-            "INSERT INTO User (username, email, password, height, birthday, gender, profile_pic, day_suscess_exerice, role) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)",
-            [username, email, hashedPassword, height, birthday, gender, profile_pic, daySuccessExerciseValue, role]
+            "INSERT INTO User (username, email, password, height, birthday, gender, profile_pic, day_suscess_exerice, role,isDisbel) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);",
+            [username, email, hashedPassword, height, birthday, gender, profile_pic, daySuccessExerciseValue, role,isDisbel]
         );
 
         res.status(201).json({ message: "User registered successfully", userId: result.insertId.toString() });
