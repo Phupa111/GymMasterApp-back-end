@@ -105,13 +105,11 @@ route.get('/selectFromEmail/:email', async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        const rows = await conn.query("SELECT * FROM User WHERE email = ?", [email]);
-        if (rows.length > 0) {
+        const rows = await conn.query("SELECT * FROM User WHERE username = ? OR email = ?", [email,email]);
+        
             const user = rows[0]; // Assuming you want to send the first user if found
             res.status(200).json({ user });
-        } else {
-            res.status(404).json({ error: 'User not found' });
-        }
+         
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: 'Internal Server Error' });
