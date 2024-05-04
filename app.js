@@ -8,11 +8,12 @@ app.use(bodyParser.urlencoded({extended:true}));
 const usersRoute = require('./routes/Users.js');
 const photoRoute = require('./routes/Photo.js');
 const progressRoute = require('./routes/Progress.js');
-
+const tabelRoute = require('./routes/Tabel.js');
 
 app.use('/user',usersRoute);
 app.use("/photo",photoRoute);
 app.use('/progress',progressRoute);
+app.use('/tabel',tabelRoute);
 app.get('/hello',(req, res )=>{
   res.send("hello world");
 })
