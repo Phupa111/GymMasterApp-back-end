@@ -30,4 +30,36 @@ route.get('/getAdminTabel',async (req, res)=>{
         }
     }
 })
+
+
+route.post('/CreatTabel', async (req, res) => {
+    const { uid, couserName, times, gender, level, description, isCreateByAdmin, dayPerWeek } = req.body;
+    let conn;
+
+    try {
+        conn = await pool.getConnection();
+
+        const sql = `INSERT INTO Training_Couser (uid, couserName, times, gender, level, description, isCreateByAdmin, dayPerWeek) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+
+        const result = await conn.query(sql, [uid, couserName, times, gender, level, description, isCreateByAdmin, dayPerWeek]);
+
+        // Log the result to inspect its structure
+        console.log(result);
+
+        // Convert BigInt values in the result to strings if needed
+        const resultStringified = JSON.parse(JSON.stringify(result, (key, value) => 
+            typeof value === 'bigint' ? value.toString() : value
+        ));
+
+        res.status(200).json({ success: true, message: 'Data inserted successfully', result: resultStringified });
+    } catch (err) {
+        console.error(err); // Log the error for debugging
+        res.status(500).json({ success: false, message: 'Error inserting data', error: err.message });
+    } finally {
+        if (conn) conn.release(); // Always release the connection back to the pool
+    }
+});
+
+
 module.exports = route;
