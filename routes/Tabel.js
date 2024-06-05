@@ -61,5 +61,46 @@ route.post('/CreatTabel', async (req, res) => {
     }
 });
 
+route.post('/getUserTabel', async (req, res) => {
+    const { uid } = req.body;
+    let conn;
+    try {
+      conn = await pool.getConnection();
+      const rows = await conn.query("SELECT * FROM Training_Couser WHERE uid = ?", [uid]);
+      console.log(rows);
+      res.status(200).send(rows);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    } finally {
+      if (conn) conn.release(); // Release the database connection back to the pool
+    }
+  });
+
+
+  route.post('/getExercisesInTabel', async (req, res) => {
+    const { tid, dayNum } = req.body;
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const rows = await conn.query(
+            "SELECT exercise_posture.eid, gif_image, exercise_posture.name, exercise_posture.muscle, exercise_posture.description, exercise_posture.eqid " +
+            "FROM exercise_posture, Coures_ex_post " +
+            "WHERE Coures_ex_post.eid = exercise_posture.eid " +
+            "AND Coures_ex_post.tid = ? " +
+            "AND Coures_ex_post.Day_Num = ?",
+            [tid, dayNum]
+        );
+        console.log(rows);
+        res.status(200).send(rows);
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: 'Internal Server Error' });
+    } finally {
+        if (conn) {
+            conn.release(); // Release the database connection back to the pool
+        }
+    }
+});
 
 module.exports = route;
