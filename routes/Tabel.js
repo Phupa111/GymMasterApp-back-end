@@ -84,7 +84,7 @@ route.post('/getUserTabel', async (req, res) => {
     try {
         conn = await pool.getConnection();
         const rows = await conn.query(
-            "SELECT exercise_posture.eid, gif_image, exercise_posture.name, exercise_posture.muscle, exercise_posture.description, exercise_posture.eqid " +
+            "SELECT exercise_posture.eid, gif_image, exercise_posture.name, Coures_ex_post.set,Coures_ex_post.rep " +
             "FROM exercise_posture, Coures_ex_post " +
             "WHERE Coures_ex_post.eid = exercise_posture.eid " +
             "AND Coures_ex_post.tid = ? " +
@@ -102,5 +102,43 @@ route.post('/getUserTabel', async (req, res) => {
         }
     }
 });
+
+route.post('/addExPosttoTabel', async (req, res) => {
+    const { tid, eid, dayNum, set, rep } = req.body;
+    let conn;
+
+    try {
+        conn = await pool.getConnection();
+
+        const query = "INSERT INTO Coures_ex_post (tid, eid, Day_Num, `set`, rep) VALUES (?, ?, ?, ?, ?)";
+        const result = await conn.query(query, [tid, eid, dayNum, set, rep]);
+
+        // Check if result is valid and extract insertId correctly
+        if (result && result.affectedRows === 1) {
+            res.json({
+                success: true,
+                message: 'Exercise post added to table successfully',
+                result: {
+                    insertId: Number(result.insertId)
+                }
+            });
+        } else {
+            throw new Error('Insert operation did not return expected result.');
+        }
+    } catch (error) {
+        console.error('Error adding exercise post to table:', error.message);
+        res.status(500).json({
+            success: false,
+            message: 'An error occurred while adding exercise post to table',
+            error: error.message
+        });
+    } finally {
+        if (conn) conn.release();
+    }
+});
+
+
+
+
 
 module.exports = route;
