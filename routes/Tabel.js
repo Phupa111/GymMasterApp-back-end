@@ -61,12 +61,32 @@ route.post('/CreatTabel', async (req, res) => {
     }
 });
 
-route.post('/getUserTabel', async (req, res) => {
+route.post('/getUnUesUserTabel', async (req, res) => {
     const { uid } = req.body;
     let conn;
     try {
       conn = await pool.getConnection();
-      const rows = await conn.query("SELECT * FROM Training_Couser WHERE uid = ?", [uid]);
+      const query = `
+        SELECT 
+          tc.tid,
+          tc.uid,
+          tc.couserName,
+          tc.times,
+          tc.gender,
+          tc.level,
+          tc.description,
+          tc.isCreateByAdmin,
+          tc.dayPerWeek
+        FROM 
+          Training_Couser tc
+        LEFT JOIN 
+          User_Enabel_Course uec ON tc.tid = uec.tid
+        WHERE 
+          tc.uid = ?
+        AND 
+          uec.tid IS NULL;
+      `;
+      const rows = await conn.query(query, [uid]);
       console.log(rows);
       res.status(200).send(rows);
     } catch (error) {
@@ -76,6 +96,8 @@ route.post('/getUserTabel', async (req, res) => {
       if (conn) conn.release(); // Release the database connection back to the pool
     }
   });
+
+  
 
 
   route.post('/getExercisesInTabel', async (req, res) => {
@@ -137,8 +159,28 @@ route.post('/addExPosttoTabel', async (req, res) => {
     }
 });
 
+route.post('/getEnnabelUserTabel', async (req, res) => {
+    const { uid } = req.body;
+    let conn;
+    try {
+      conn = await pool.getConnection();
+      const query = `      SELECT tc.*
+      FROM Training_Couser tc
+      JOIN User_Enabel_Course uec ON tc.uid = uec.uid
+      WHERE tc.uid = ? AND uec.tid = tc.tid;`;
+      const rows = await conn.query(query, [uid]);
+      console.log(rows);
+      res.status(200).send(rows);
+    } catch (error) {
+      console.error(error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    } finally {
+      if (conn) conn.release(); // Release the database connection back to the pool
+    }
+  });
 
 
+                                                                                                                                                                                                                                                                                                                                                     
 
 
 module.exports = route;
