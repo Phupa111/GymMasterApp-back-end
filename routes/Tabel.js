@@ -14,22 +14,43 @@ const pool = mariadb.createPool({
     connectionLimit : 5
 })
 
-route.get('/getAdminTabel',async (req, res)=>{
+
+route.get('/getAdminTabel', async (req, res) => {
     let conn;
     try {
         conn = await pool.getConnection();
-        const rows = await conn.query("SELECT * FROM Training_Couser Where isCreateByAdmin = 1");
+        const query = `
+          SELECT 
+            tc.tid,
+            tc.uid,
+            tc.couserName,
+            tc.times,
+            tc.gender,
+            tc.level,
+            tc.description,
+            tc.isCreateByAdmin,
+            tc.dayPerWeek
+          FROM 
+            Training_Couser tc
+          LEFT JOIN 
+            User_Enabel_Course uec ON tc.tid = uec.tid
+          WHERE 
+            tc.isCreateByAdmin = 1
+          AND 
+            uec.tid IS NULL;
+        `;
+        const rows = await conn.query(query);
         console.log(rows);
         res.status(200).send(rows);
     } catch (error) {
-        console.error(error);
+        console.error('Error executing query:', error);
         res.status(500).json({ error: 'Internal Server Error' });
     } finally {
         if (conn) {
             conn.release(); // Release the database connection back to the pool
         }
     }
-})
+});
 
 
 route.post('/CreatTabel', async (req, res) => {
