@@ -145,6 +145,37 @@ route.post('/EnabelCouser', async (req, res) => {
     }
   });
 
+  route.get('/getFixUserEnCouser', async (req, res) => {
+    let conn;
+    try {
+      // Extract uid and tid from query parameters
+      const { uid, tid } = req.query;
+  
+      // Ensure uid and tid are provided
+      if (!uid || !tid) {
+        return res.status(400).json({ error: 'uid and tid are required' });
+      }
+  
+      // Establish a database connection
+      conn = await pool.getConnection();
+  
+      // Prepare the SQL query
+      const sql = "SELECT * FROM User_Enabel_Course WHERE uid = ? AND tid = ? AND  week_start_date IS NOT NULL   AND is_success = 0 ORDER BY utid  ";
+      const rows = await conn.query(sql, [uid, tid]);
+  
+      // Send the retrieved data back to the client
+      res.status(200).json(rows);
+    } catch (error) {
+      console.error('Error fetching user-enabled course:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+    } finally {
+      // Ensure the connection is closed
+      if (conn) {
+        conn.release();
+      }
+    }
+  });
+
   route.get('/getSuccesUserEnCouser', async (req, res) => {
     let conn;
     try {
@@ -224,8 +255,8 @@ route.post('/updateIsSuccess', async (req, res) => {
 route.get('/getWeek', async (req, res) => {
   let conn;
   try {
-      const { uid, tid } = req.query;
-      if (!uid || !tid) {
+      const { uid, tid,week,day } = req.query;
+      if (!uid || !tid || !week || !day) {
           return res.status(400).json({ error: 'uid and tid are required' });
       }
 
@@ -235,10 +266,10 @@ route.get('/getWeek', async (req, res) => {
           FROM User_Enabel_Course
           WHERE uid = ?
             AND tid = ?
-            AND week = 1
-            AND day = 1 
+            AND week = ?
+            AND day = ?
       `;
-      const rows = await conn.query(sql, [uid, tid]);
+      const rows = await conn.query(sql, [uid, tid,week,day]);
       res.status(200).json(rows);
   } catch (error) {
       console.error('Error fetching week difference:', error);
@@ -247,6 +278,38 @@ route.get('/getWeek', async (req, res) => {
       if (conn) conn.release();
   }
 });
+
+route.get('/countSuccessUserEnCourse', async (req, res) => {
+  let conn;
+  try {
+    // Extract uid and tid from query parameters
+    const { uid, tid } = req.query;
+
+    // Ensure uid and tid are provided
+    if (!uid || !tid) {
+      return res.status(400).json({ error: 'uid and tid are required' });
+    }
+
+    // Establish a database connection
+    conn = await pool.getConnection();
+
+    // Prepare the SQL query
+    const sql = "SELECT COUNT(*) as count FROM User_Enabel_Course WHERE uid = ? AND tid = ? AND is_success = 1";
+    const [rows] = await conn.query(sql, [uid, tid]);
+
+    // Send the retrieved data back to the client
+    res.status(200).json({ ...rows[0], message: 'is_success updated successfully' });
+  } catch (error) {
+    console.error('Error fetching user-enabled course:', error);
+    res.status(500).json({ error: 'Internal Server Error' });
+  } finally {
+    // Ensure the connection is closed
+    if (conn) {
+      conn.release();
+    }
+  }
+});
+
 
 
 module.exports = route;
