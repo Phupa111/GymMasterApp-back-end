@@ -98,7 +98,7 @@ route.post('/getDayOfExercise', async(req, res)=>{
             cut_protein_gram = cut * 0.55 / 4;
             cut_fat_gram = cut * 0.15 / 9;
 
-            return res.status(200).send({
+            return res.status(200).send([{
                 bulking : Math.floor(bulk),
                 maintenance : Math.floor(main),
                 cutting : Math.floor(cut),
@@ -112,7 +112,7 @@ route.post('/getDayOfExercise', async(req, res)=>{
                 cut_protein_gram : Math.floor(cut_protein_gram),
                 cut_fat_gram : Math.floor(cut_fat_gram)
                 
-            });
+            }]);
         }else{
             const user_data = await conn.query(
                 "SELECT User.uid, User.gender, User.birthday, User.height, LatestProgress.weight "
@@ -160,7 +160,7 @@ route.post('/getDayOfExercise', async(req, res)=>{
             cut_carbohydrate_gram = cut * 0.30 / 4;
             cut_protein_gram = cut * 0.55 / 4;
             cut_fat_gram = cut * 0.15 / 9;
-            return res.status(200).send({
+            return res.status(200).send([{
                 bulking : Math.floor(bulk),
                 maintenance : Math.floor(main),
                 cutting : Math.floor(cut),
@@ -173,7 +173,7 @@ route.post('/getDayOfExercise', async(req, res)=>{
                 cut_carb_gram : Math.floor(cut_carbohydrate_gram),
                 cut_protein_gram : Math.floor(cut_protein_gram),
                 cut_fat_gram : Math.floor(cut_fat_gram)
-            });
+            }]);
         }
     }catch(error){
         console.error(error);
