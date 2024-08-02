@@ -177,10 +177,64 @@ route.post('/getDayOfExercise', async(req, res)=>{
         }
     }catch(error){
         console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
+        res.status(500).json({ error: error });
     }finally {
         if (conn) {
             conn.release(); // Release the database connection back to the pool
+        }
+    }
+})
+
+route.post('/getBmrAndBmi',async(req, res)=>{
+    const  {uid} = req.body;
+    let conn;
+
+    let bmr = 0;
+    let bmi = 0;
+    try {
+        conn = await pool.getConnection();
+        const result = await conn.query(
+            "SELECT User.uid, User.gender, User.birthday, User.height, LatestProgress.weight "
+            +"FROM User "
+            +"JOIN ( "
+            +"SELECT Progress.uid, Progress.weight "
+            +"FROM Progress "
+            +"INNER JOIN ( "
+                +"SELECT uid, MAX(data_progress) AS max_date "
+                +"FROM Progress "
+                +"GROUP BY uid "
+                +") AS MaxProgress ON Progress.uid = MaxProgress.uid AND Progress.data_progress = MaxProgress.max_date "
+            +") AS LatestProgress ON User.uid = LatestProgress.uid "
+            +"WHERE User.uid = ?"
+            ,[uid]);
+
+        if(result.length > 0){
+            const toDay = new Date();
+            const birthday = new Date(result[0].birthday)
+            let age = toDay.getFullYear() - birthday.getFullYear();
+
+            //calculate BMI
+            bmi = result[0].weight / ((result[0].height / 100) * (result[0].height / 100));
+
+            //calculate BMR
+            if(result[0].gender == 1){
+                bmr = 66 + (13.7 * result[0].weight) + (5 * result[0].height) - (6.8 * age);
+            }else{
+                bmr = 665 + (9.6 * result[0].weight) + (1.8 * result[0].height) - (4.7 * age);
+            }
+            res.status(200).send({
+                bmi : bmi.toFixed(1),
+                bmr : Math.floor(bmr)
+            })
+        }else{
+            res.status(200).send(result);
+        }
+    } catch (error) {
+        console.error(error);
+        res.status(500).json({ error: error });
+    }finally{
+        if(conn){
+            conn.release();
         }
     }
 })
