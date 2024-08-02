@@ -11,6 +11,7 @@ const progressRoute = require('./routes/Progress.js');
 const tabelRoute = require('./routes/Tabel.js');
 const exercisePostureRoute = require('./routes/Exerices_Post.js');
 const enabledCouserRoute = require('./routes/User_Enabel_Course.js');
+const calculateRoute = require("./routes/Calculate.js");
 
 
 app.use('/user',usersRoute);
@@ -19,6 +20,7 @@ app.use('/progress',progressRoute);
 app.use('/tabel',tabelRoute);
 app.use('/exPost',exercisePostureRoute);
 app.use('/enCouser',enabledCouserRoute)
+app.use('/calculate',calculateRoute);
 
 app.get('/hello',(req, res )=>{
   res.send("hello world");
