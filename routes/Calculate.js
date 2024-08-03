@@ -185,16 +185,16 @@ route.post('/getDayOfExercise', async(req, res)=>{
     }
 })
 
-route.post('/getBmrAndBmi',async(req, res)=>{
-    const  {uid} = req.body;
+route.post('/getDataUserAndBodyFat',async(req, res)=>{
+    const {uid} = req.body;
     let conn;
-
-    let bmr = 0;
     let bmi = 0;
+    let bmr = 0;
+    let bodyFat = 0;
     try {
         conn = await pool.getConnection();
         const result = await conn.query(
-            "SELECT User.uid, User.gender, User.birthday, User.height, LatestProgress.weight "
+            "SELECT User.uid, User.username, User.email, User.profile_pic, User.gender, User.birthday, User.height, LatestProgress.weight "
             +"FROM User "
             +"JOIN ( "
             +"SELECT Progress.uid, Progress.weight "
@@ -207,35 +207,37 @@ route.post('/getBmrAndBmi',async(req, res)=>{
             +") AS LatestProgress ON User.uid = LatestProgress.uid "
             +"WHERE User.uid = ?"
             ,[uid]);
+            
+            if(result.length > 0){
+                console.log(result);
+                const today = new Date();
+                const birthday = new Date(result[0].birthday);
+                let age = today.getFullYear() - birthday.getFullYear();
+                console.log(age);
+                 //calculate BMI
+                bmi = result[0].weight / ((result[0].height / 100) * (result[0].height / 100));
+                if(result[0] == 1){
+                    bodyFat = (1.2 * bmi) + (0.23 * age) - 16.2;
+                    bmr = 66 + (13.7 * result[0].weight) + (5 * result[0].height) - (6.8 * age);
+                }else{
+                    bodyFat = (1.2 * bmi) + (0.23 * age) - 5.4;
+                    bmr = 665 + (9.6 * result[0].weight) + (1.8 * result[0].height) - (4.7 * age);
+                }
 
-        if(result.length > 0){
-            const toDay = new Date();
-            const birthday = new Date(result[0].birthday)
-            let age = toDay.getFullYear() - birthday.getFullYear();
-
-            //calculate BMI
-            bmi = result[0].weight / ((result[0].height / 100) * (result[0].height / 100));
-
-            //calculate BMR
-            if(result[0].gender == 1){
-                bmr = 66 + (13.7 * result[0].weight) + (5 * result[0].height) - (6.8 * age);
+                res.status(200).json([{
+                    detail : result,
+                    bmi : bmi.toFixed(1),
+                    bmr : Math.floor(bmr).toString(),
+                    bodyFat : bodyFat.toFixed(1)
+                }]);
             }else{
-                bmr = 665 + (9.6 * result[0].weight) + (1.8 * result[0].height) - (4.7 * age);
+                res.status(200).send({message : "No Data!!"})
             }
-            res.status(200).send({
-                bmi : bmi.toFixed(1),
-                bmr : Math.floor(bmr)
-            })
-        }else{
-            res.status(200).send(result);
-        }
     } catch (error) {
         console.error(error);
         res.status(500).json({ error: error });
     }finally{
-        if(conn){
-            conn.release();
-        }
+        conn.release();
     }
 })
 module.exports = route;
