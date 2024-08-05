@@ -231,27 +231,65 @@ route.post('/getEnnabelUserTabel', async (req, res) => {
 });
 
 
-  route.post('/getEnnabelAdminTabel', async (req, res) => {
+route.post('/getEnnabelAdminTabel', async (req, res) => {
     const { uid } = req.body;
     let conn;
     try {
         conn = await pool.getConnection();
         const query = `
-            SELECT tc.*
-            FROM Training_Couser tc
-            JOIN User_Enabel_Course uec ON tc.tid = uec.tid
-            WHERE uec.uid = ? AND tc.isCreateByAdmin = 1 AND uec.week =1 AND uec.day = 1;;
+            SELECT 
+                tc.*, 
+                COALESCE(uc.count, 0) AS count
+            FROM 
+                Training_Couser tc
+            LEFT JOIN 
+                (
+                    SELECT 
+                        uec.tid, 
+                        COUNT(*) AS count
+                    FROM 
+                        User_Enabel_Course uec
+                    WHERE 
+                        uec.is_success = 1
+                    GROUP BY 
+                        uec.tid
+                ) uc ON tc.tid = uc.tid
+            WHERE 
+                tc.isCreateByAdmin = 1
+                AND EXISTS (
+                    SELECT 1
+                    FROM User_Enabel_Course uec
+                    WHERE 
+                        uec.uid = ?
+                        AND uec.tid = tc.tid
+                        AND uec.week = 1
+                        AND uec.day = 1
+                );
         `;
-        const rows = await conn.query(query, [uid]);
-        console.log(rows);
-        res.status(200).send(rows);
-    } catch (error) {
-        console.error(error);
-        res.status(500).json({ error: 'Internal Server Error' });
-    } finally {
-        if (conn) conn.release(); // Release the database connection back to the pool
-    }
+        
+        const rows = await conn.query(query, [uid, uid]);
+
+      // Convert BigInt to Number
+      const sanitizedRows = rows.map(row => {
+          const newRow = { ...row };
+          for (const key in newRow) {
+              if (typeof newRow[key] === 'bigint') {
+                  newRow[key] = Number(newRow[key]);
+              }
+          }
+          return newRow;
+      });
+
+      console.log(sanitizedRows);
+      res.status(200).json(sanitizedRows);
+  } catch (error) {
+      console.error('Error fetching enabled user table:', error);
+      res.status(500).json({ error: 'Internal Server Error' });
+  } finally {
+      if (conn) conn.release(); // Release the database connection back to the pool
+  }
 });
+
            
 
 
