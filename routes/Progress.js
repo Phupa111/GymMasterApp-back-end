@@ -1,7 +1,7 @@
 const mariadb = require("mariadb");
 const dotenv = require("dotenv");
 const express = require("express");
-
+const auth = require("../middleware/auth.js");
 dotenv.config();
 
 const route = express.Router();
@@ -14,24 +14,24 @@ const pool = mariadb.createPool({
   connectionLimit: 5,
 });
 
-route.get("/getAllProgress", async (req, res) => {
-  let conn;
-  try {
-    conn = await pool.getConnection();
-    const rows = await conn.query("SELECT * FROM Progress");
-    console.log(rows);
-    res.status(200).send(rows);
-  } catch (error) {
-    console.error(error);
-    res.status(500).json({ error: "Internal Server Error" });
-  } finally {
-    if (conn) {
-      conn.release(); // Release the database connection back to the pool
-    }
-  }
-});
+// route.get("/getAllProgress", async (req, res) => {
+//   let conn;
+//   try {
+//     conn = await pool.getConnection();
+//     const rows = await conn.query("SELECT * FROM Progress");
+//     console.log(rows);
+//     res.status(200).send(rows);
+//   } catch (error) {
+//     console.error(error);
+//     res.status(500).json({ error: "Internal Server Error" });
+//   } finally {
+//     if (conn) {
+//       conn.release(); // Release the database connection back to the pool
+//     }
+//   }
+// });
 
-route.post("/weightInsert", async (req, res) => {
+route.post("/weightInsert", auth, async (req, res) => {
   const { uid, weight } = req.body;
 
   let conn;
@@ -54,7 +54,7 @@ route.post("/weightInsert", async (req, res) => {
   }
 });
 
-route.get("/getWeightProgress", async (req, res) => {
+route.get("/getWeightProgress", auth, async (req, res) => {
   let conn;
   try {
     const { uid } = req.query; // Retrieve the uid from query parameters
@@ -85,7 +85,7 @@ route.get("/getWeightProgress", async (req, res) => {
   }
 });
 
-route.post("/updateWeigth", async (req, res) => {
+route.post("/updateWeigth", auth, async (req, res) => {
   const { newWeight, uid, dataProgress } = req.body;
 
   if (!uid || !dataProgress || !newWeight) {
