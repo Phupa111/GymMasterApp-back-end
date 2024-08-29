@@ -1,7 +1,7 @@
 const mariadb = require("mariadb");
 const dotenv = require("dotenv");
 const express = require("express");
-
+const auth = require("../middleware/auth.js");
 dotenv.config();
 
 const route = express.Router();
@@ -14,7 +14,7 @@ const pool = mariadb.createPool({
   connectionLimit: 5,
 });
 
-route.get("/getAdminTabel", async (req, res) => {
+route.get("/getAdminTabel", auth, async (req, res) => {
   const uid = req.query.uid; // Assuming `uid` is passed as a query parameter
   const searchQuery = req.query.search || ""; // Assuming `search` is passed as a query parameter
   const genderFilter = req.query.gender || ""; // Gender filter from query
@@ -61,7 +61,7 @@ route.get("/getAdminTabel", async (req, res) => {
   }
 });
 
-route.get("/getAdminTabelByFillter", async (req, res) => {
+route.get("/getAdminTabelByFillter", auth, async (req, res) => {
   const uid = req.query.uid; // Assuming `uid` is passed as a query parameter
   // Assuming `search` is passed as a query parameter
   const genderFilter = req.query.gender || ""; // Gender filter from query
@@ -102,7 +102,7 @@ route.get("/getAdminTabelByFillter", async (req, res) => {
   }
 });
 
-route.post("/CreatTabel", async (req, res) => {
+route.post("/CreatTabel", auth, async (req, res) => {
   const {
     uid,
     couserName,
@@ -159,7 +159,7 @@ route.post("/CreatTabel", async (req, res) => {
   }
 });
 
-route.post("/getUnUesUserTabel", async (req, res) => {
+route.post("/getUnUesUserTabel", auth, async (req, res) => {
   const { uid } = req.body;
   let conn;
   try {
@@ -187,7 +187,7 @@ route.post("/getUnUesUserTabel", async (req, res) => {
   }
 });
 
-route.post("/getExercisesInTabel", async (req, res) => {
+route.post("/getExercisesInTabel", auth, async (req, res) => {
   const { tid, dayNum } = req.body;
   let conn;
   try {
@@ -212,7 +212,7 @@ route.post("/getExercisesInTabel", async (req, res) => {
   }
 });
 
-route.post("/addExPosttoTabel", async (req, res) => {
+route.post("/addExPosttoTabel", auth, async (req, res) => {
   const { tid, eid, dayNum, set, rep } = req.body;
   let conn;
 
@@ -247,7 +247,7 @@ route.post("/addExPosttoTabel", async (req, res) => {
   }
 });
 
-route.post("/getEnnabelUserTabel", async (req, res) => {
+route.post("/getEnnabelUserTabel", auth, async (req, res) => {
   const { uid } = req.body;
   let conn;
   try {
@@ -305,7 +305,7 @@ route.post("/getEnnabelUserTabel", async (req, res) => {
   }
 });
 
-route.post("/getEnnabelAdminTabel", async (req, res) => {
+route.post("/getEnnabelAdminTabel", auth, async (req, res) => {
   const { uid } = req.body;
   let conn;
   try {
