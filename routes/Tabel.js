@@ -193,7 +193,7 @@ route.post("/getExercisesInTabel", auth, async (req, res) => {
   try {
     conn = await pool.getConnection();
     const rows = await conn.query(
-      "SELECT exercise_posture.eid, gif_image, exercise_posture.name, Coures_ex_post.set,Coures_ex_post.rep " +
+      "SELECT Coures_ex_post.cpid, exercise_posture.eid, gif_image, exercise_posture.name, Coures_ex_post.set,Coures_ex_post.rep " +
         "FROM exercise_posture, Coures_ex_post " +
         "WHERE Coures_ex_post.eid = exercise_posture.eid " +
         "AND Coures_ex_post.tid = ? " +
@@ -302,6 +302,64 @@ route.post("/getEnnabelUserTabel", auth, async (req, res) => {
     res.status(500).json({ error: "Internal Server Error" });
   } finally {
     if (conn) conn.release(); // Release the database connection back to the pool
+  }
+});
+route.delete("/deleteExInCouser", auth, async (req, res) => {
+  let conn;
+  try {
+    const { cpid } = req.query; // Retrieve the tid from query parameters
+
+    if (!cpid) {
+      return res.status(400).json({ error: "Bad Request: Missing tid" });
+    }
+
+    conn = await pool.getConnection();
+    const result = await conn.query(
+      `DELETE FROM Coures_ex_post WHERE cpid = ?`,
+      [cpid]
+    );
+
+    if (result.affectedRows > 0) {
+      res.status(200).json({ message: "Course deleted successfully" });
+    } else {
+      res.status(404).json({ error: "Course not found" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    if (conn) {
+      conn.release(); // Release the database connection back to the pool
+    }
+  }
+});
+route.delete("/deleteCouser", auth, async (req, res) => {
+  let conn;
+  try {
+    const { tid } = req.query; // Retrieve the tid from query parameters
+
+    if (!tid) {
+      return res.status(400).json({ error: "Bad Request: Missing tid" });
+    }
+
+    conn = await pool.getConnection();
+    const result = await conn.query(
+      `DELETE FROM Training_Couser WHERE tid = ?`,
+      [tid]
+    );
+
+    if (result.affectedRows > 0) {
+      res.status(200).json({ message: "Course deleted successfully" });
+    } else {
+      res.status(404).json({ error: "Course not found" });
+    }
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    if (conn) {
+      conn.release(); // Release the database connection back to the pool
+    }
   }
 });
 
