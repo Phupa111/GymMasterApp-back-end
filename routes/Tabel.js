@@ -112,14 +112,15 @@ route.post("/CreatTabel", auth, async (req, res) => {
     description,
     isCreateByAdmin,
     dayPerWeek,
+    time_rest,
   } = req.body;
   let conn;
 
   try {
     conn = await pool.getConnection();
 
-    const sql = `INSERT INTO Training_Couser (uid, couserName, times, gender, level, description, isCreateByAdmin, dayPerWeek) 
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)`;
+    const sql = `INSERT INTO Training_Couser (uid, couserName, times, gender, level, description, isCreateByAdmin, dayPerWeek, time_rest) 
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
     const result = await conn.query(sql, [
       uid,
@@ -128,8 +129,9 @@ route.post("/CreatTabel", auth, async (req, res) => {
       gender,
       level,
       description,
-      isCreateByAdmin,
+      isCreateByAdmin !== undefined ? isCreateByAdmin : 0, // Use the provided or default value
       dayPerWeek,
+      time_rest,
     ]);
 
     // Log the result to inspect its structure

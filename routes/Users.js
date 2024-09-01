@@ -170,17 +170,8 @@ route.get("/getGuestToken", async (req, res) => {
   try {
     // Define the payload for the guest token
     const payload = {
-      uid: 0,
-      username: "geust",
-      email: "geust@gmail.com",
-      password: "geust",
-      height: 0,
-      birthday: "1990-05-14",
-      gender: 0,
-      profile_pic: "",
-      day_suscess_exerice: 0,
-      role: 0,
-      isDisbel: 0,
+      role: "geust",
+
       // You can add other guest-specific information if needed
     };
 
