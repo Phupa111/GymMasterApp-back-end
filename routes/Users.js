@@ -120,6 +120,128 @@ route.get('/selectFromEmail/:email', async (req, res) => {
     }
 });
 
+route.post('/getDataUserById',async(req, res)=>{
+    const {uid} = req.body;
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const sql = `SELECT User.uid, User.gender, User.Profile_pic, User.username, User.password, User.height, Progress.weight
+                    FROM User 
+                    JOIN Progress ON User.uid = Progress.uid
+                    WHERE User.uid = ?
+                    AND Progress.data_progress = (
+                        SELECT MAX(data_progress)
+                        FROM Progress
+                        WHERE Progress.uid = User.uid
+                    )`;
+        const result = await conn.query(sql,[uid]);
+        if(result.length > 0){
+            res.status(200).json([{
+                "uid" : result[0].uid,
+                "gender" : result[0].gender,
+                "Profile_pic" : result[0].Profile_pic,
+                "username" : result[0].username,
+                "password" : result[0].password,
+                "height" : result[0].height,
+                "weight" : result[0].weight.toFixed(1)
+            }]);
+        }else{
+            res.status(404).json({ error: 'User not found' });
+        }
+        
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error' +error})
+    } finally {
+        if(conn){conn.release();}
+    }
+});
+
+route.post('/update/gender', async (req, res) => {
+    const { uid, gender } = req.body;
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const sql = `UPDATE User SET gender = ? WHERE uid = ?`;
+        const result = await conn.query(sql, [gender, uid]);
+        res.status(200).json(1); // Success with 200 status code
+        
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error: ' + error }); // 500 for internal server errors
+    } finally {
+        if (conn) conn.release(); // Ensure the connection is released
+    }
+});
+
+route.post('/update/username',async (req,res) => {
+    const {uid,username} = req.body;
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const sql = `UPDATE User SET username = ? WHERE uid = ?`;
+        const resutl = await conn.query(sql,[username,uid]);
+        res.status(200).json(1);
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error: ' + error });
+    }finally{
+        if(conn){
+            conn.release();
+        }
+    }
+});
+
+route.post('/update/password',async(req,res)=>{
+    const {uid,password} = req.body;
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const sql = `SELECT User.password 
+                    From User 
+                    WHERE User.uid = ?`;
+        const fetchPassword = await conn.query(sql,[uid]);
+
+        if(fetchPassword.length > 0){
+            const match = await bcrypt.compare(password,fetchPassword[0].password);
+            if(match){
+                res.status(200).json(1);
+            }else{
+                const hashNewPassword = await bcrypt.hash(password,10);
+                const sqlUpdatePassword = `UPDATE User SET User.password = ? WHERE User.uid = ?`;
+                await conn.query(sqlUpdatePassword,[hashNewPassword,uid]);
+                res.status(200).json(0);
+            }
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error: ' + error });
+    } finally {
+        if(conn){
+            conn.release();
+        }
+    }
+});
+
+route.post('/update/height',async (req,res)=>{
+    const {uid,height} = req.body;
+    let conn;
+    try {
+        conn = await pool.getConnection();
+        const sql =`UPDATE User SET User.height = ? WHERE User.uid = ?`;
+        const result = await conn.query(sql,[height,uid]);
+        
+        if (result.affectedRows > 0) {
+            res.status(200).json(1);
+            console.log('Data updated successfully!');
+        } else {
+            res.status(404).json({ message: 'No data updated' });
+            console.log('No data updated.');
+        }
+    } catch (error) {
+        res.status(500).json({ error: 'Internal Server Error: ' + error });
+    } finally {
+        if(conn){
+            conn.release();
+        }
+    }
+})
 
 
 module.exports = route;
