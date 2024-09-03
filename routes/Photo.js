@@ -3,6 +3,7 @@ const dotenv = require('dotenv')
 const express = require('express')
 const multer = require('multer');
 const fire = require('firebase/storage')
+const sharp = require('sharp')
 dotenv.config();
 
 const {app,storage} = require("../config/firebase.config.js")
@@ -19,12 +20,27 @@ const pool = mariadb.createPool({
 })
 
 route.post('/uploadImage',upload.single('file'),async(req, res)=>{
+  const {uid} = req.body;
+  let conn;
     try {
-      const imageURL  = await firebaseUploadImage(req.file);
-      res.status(200).json(imageURL);
+      //Resize data Image
+      const resizedImageBuffer = await sharp(req.file.buffer).jpeg({quality: 65}).toBuffer();
+      const imageURL  = await firebaseUploadImage({...req.file,buffer:resizedImageBuffer});
+      
+      conn = await pool.getConnection();
+      const sql = `UPDATE User SET User.profile_pic = ? WHERE User.uid = ?`;
+      const result = conn.query(sql,[imageURL,uid]);
+
+      
+        res.status(200).json(imageURL);
+        console.log('Data updated successfully!');
     } catch (error) {
       console.error("Error uploading file:", error);
         res.status(500).json({ error: "Failed to upload file" });
+    }finally{
+      if(conn){
+        conn.release();
+      }
     }
 
 // const file = req.file;
@@ -49,12 +65,8 @@ async function firebaseUploadImage(img){
 
     const downloadURL = await fire.getDownloadURL(snapshot.ref)
     console.log('File successfully uploaded.');
-        return {
-            message: 'file uploaded to firebase storage',
-            name: filename,
-            type: img.mimetype,
-            downloadURL: downloadURL
-        }
+        return downloadURL;
+        
   } catch (error) {
     // หากเกิดข้อผิดพลาดในขณะอัปโหลด
     console.error("Error uploading image:", error);

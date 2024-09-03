@@ -23,6 +23,8 @@
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "run": "^1.5.0",
-    "start": "^5.1.0"
+    "start": "^5.1.0",
+    "nodejs_gymmaster_backend": "file:",
+    "sharp": "^0.33.4"
   }
 }
