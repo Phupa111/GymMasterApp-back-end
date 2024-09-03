@@ -19,12 +19,12 @@
     "jwt-simple": "^0.5.6",
     "mariadb": "^3.2.3",
     "multer": "^1.4.5-lts.1",
+    "nodejs_gymmaster_backend": "file:",
     "nodemon": "^3.1.0",
     "passport": "^0.7.0",
     "passport-jwt": "^4.0.1",
     "run": "^1.5.0",
-    "start": "^5.1.0",
-    "nodejs_gymmaster_backend": "file:",
-    "sharp": "^0.33.4"
+    "sharp": "^0.33.4",
+    "start": "^5.1.0"
   }
 }
