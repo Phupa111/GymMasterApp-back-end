@@ -424,4 +424,67 @@ route.post("/getEnnabelAdminTabel", auth, async (req, res) => {
   }
 });
 
+route.get("/getAllEnnabelUserTabel", auth, async (req, res) => {
+  const { uid } = req.query; // Use req.query for GET requests
+  if (!uid) {
+    return res.status(400).json({ error: "UID is required" }); // Validate UID
+  }
+
+  let conn;
+  try {
+    conn = await pool.getConnection();
+
+    const query = `
+      SELECT 
+        tc.*, 
+        COALESCE(uc.count, 0) AS count
+      FROM 
+        Training_Couser tc
+      LEFT JOIN 
+        (
+          SELECT 
+            uec.tid, 
+            COUNT(*) AS count
+          FROM 
+            User_Enabel_Course uec
+          WHERE 
+            uec.is_success = 1
+          GROUP BY 
+            uec.tid
+        ) uc ON tc.tid = uc.tid
+      WHERE 
+        EXISTS (
+          SELECT 1
+          FROM User_Enabel_Course uec
+          WHERE 
+            uec.uid = ?
+            AND uec.tid = tc.tid
+            AND uec.week = 1
+            AND uec.day = 1
+        );
+    `;
+
+    const rows = await conn.query(query, [uid]);
+
+    // Convert BigInt to Number (for any potential BigInt columns)
+    const sanitizedRows = rows.map((row) => {
+      const newRow = { ...row };
+      for (const key in newRow) {
+        if (typeof newRow[key] === "bigint") {
+          newRow[key] = Number(newRow[key]);
+        }
+      }
+      return newRow;
+    });
+
+    console.log("Sanitized Rows:", sanitizedRows);
+    res.status(200).json(sanitizedRows);
+  } catch (error) {
+    console.error("Error fetching enabled user table:", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    if (conn) conn.release(); // Release the database connection back to the pool
+  }
+});
+
 module.exports = route;

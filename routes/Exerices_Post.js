@@ -13,9 +13,9 @@ const pool = mariadb.createPool({
   database: process.env.GYMMASTER_DB,
   connectionLimit: 5,
 });
-route.get("/getExPost", auth, async (req, res) => {
+route.get("/getExPosts", auth, async (req, res) => {
   let conn;
-  const { tid, dayNum } = req.query; // Extract tid and dayNum from query parameters
+  const { tid, dayNum, nameFilter, equipmentFilter, muscleFilter } = req.query; // Extract tid and dayNum from query parameters
 
   // Validate query parameters
   if (!tid || !dayNum) {
@@ -25,12 +25,45 @@ route.get("/getExPost", auth, async (req, res) => {
   try {
     conn = await pool.getConnection();
     const query = `
-        SELECT ep.*
-        FROM exercise_posture ep
-        LEFT JOIN Coures_ex_post cep ON ep.eid = cep.eid AND cep.tid = ? AND cep.Day_Num = ?
-        WHERE cep.eid IS NULL;
-      `;
-    const rows = await conn.query(query, [tid, dayNum]); // Pass tid and dayNum as parameters to the query
+   SELECT ep.*, eqp.Name AS equipment
+FROM exercise_posture ep
+LEFT JOIN Equiment  eqp ON ep.eqid = eqp.eqid
+LEFT JOIN Coures_ex_post cep 
+    ON ep.eid = cep.eid 
+    AND cep.tid = ?
+    AND cep.Day_Num = ?
+WHERE cep.eid IS NULL
+  AND ep.name LIKE ?
+      AND eqp.eqid LIKE ?
+      AND ep.muscle LIKE ?
+
+ 
+    `;
+    const rows = await conn.query(query, [
+      tid,
+      dayNum,
+      `%${nameFilter || ""}%`,
+      `%${equipmentFilter || ""}%`,
+      `%${muscleFilter || ""}%`,
+    ]); // Pass tid and dayNum as parameters to the query
+    console.log(rows);
+    res.status(200).send(rows);
+  } catch (error) {
+    console.error(error);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    if (conn) {
+      conn.release(); // Release the database connection back to the pool
+    }
+  }
+});
+
+route.get("/getEqiumentList", auth, async (req, res) => {
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const query = "SELECT * FROM Equiment";
+    const rows = await conn.query(query);
     console.log(rows);
     res.status(200).send(rows);
   } catch (error) {
