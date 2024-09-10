@@ -86,7 +86,10 @@ route.post("/getDataUserById", async (req, res) => {
                         SELECT MAX(data_progress)
                         FROM Progress
                         WHERE Progress.uid = User.uid
-                    )`;
+                    )
+                    AND Progress.weight IS NOT NULL
+                    ORDER BY data_progress DESC
+                    LIMIT 1`;
     const result = await conn.query(sql, [uid]);
     if (result.length > 0) {
       res.status(200).json([

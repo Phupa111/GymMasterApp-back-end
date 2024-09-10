@@ -1,4 +1,4 @@
-const mariadb = require("mariadb");
+const mariadb = require('mariadb')
 const dotenv = require("dotenv");
 const express = require("express");
 const auth = require("../middleware/auth.js");
@@ -116,5 +116,27 @@ route.post("/updateWeigth", auth, async (req, res) => {
     if (conn) conn.release(); // Release the database connection back to the pool
   }
 });
+
+route.get('/GetProgressUser/:uid',auth ,async (req, res)=>{
+  let conn;
+  const uid = req.params.uid;
+  try {
+    conn = await pool.getConnection();
+    const sql =`SELECT Progress.uid, Progress.weight, Progress.picture, Progress.data_progress
+                FROM Progress
+                WHERE Progress.uid = ?
+                AND Progress.picture IS NOT NULL`;
+    const result = await conn.query(sql,[uid]);
+    if (result.length > 0) {
+      res.status(200).json(result);
+    } else {
+      res.status(404).json({ error: "No matching record found" });
+    }
+  } catch (error) {
+    console.log("Error to request: ",error);
+    res.status(500).json({error:"Failed to Request "+error})
+  }
+});
+
 
 module.exports = route;
