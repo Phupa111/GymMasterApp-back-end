@@ -2,6 +2,7 @@ const mariadb = require("mariadb");
 const dotenv = require("dotenv");
 const express = require("express");
 const auth = require("../middleware/auth.js");
+const jwt = require("jsonwebtoken");
 dotenv.config();
 
 const route = express.Router();
@@ -204,18 +205,18 @@ route.post("/getDataUserAndBodyFat", auth, async (req, res) => {
   try {
     conn = await pool.getConnection();
     const result = await conn.query(
-      "SELECT User.uid, User.username, User.email, User.profile_pic, User.gender, User.birthday, User.height, LatestProgress.weight " +
-        "FROM User " +
-        "JOIN ( " +
-        "SELECT Progress.uid, Progress.weight " +
-        "FROM Progress " +
-        "INNER JOIN ( " +
-        "SELECT uid, MAX(data_progress) AS max_date " +
-        "FROM Progress " +
-        "GROUP BY uid " +
-        ") AS MaxProgress ON Progress.uid = MaxProgress.uid AND Progress.data_progress = MaxProgress.max_date " +
-        ") AS LatestProgress ON User.uid = LatestProgress.uid " +
-        "WHERE User.uid = ?",
+      `SELECT User.uid, User.username, User.email, User.profile_pic, User.gender, User.birthday, User.height, Progress.weight
+       FROM User
+       JOIN Progress ON User.uid = Progress.uid
+       WHERE User.uid = ?
+       AND Progress.data_progress = (
+            SELECT MAX(data_progress)
+            FROM Progress
+            WHERE Progress.uid = User.uid
+        )
+        AND Progress.weight IS NOT NULL
+        ORDER BY data_progress DESC
+        LIMIT 1`,
       [uid]
     );
 
