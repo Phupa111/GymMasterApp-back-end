@@ -228,6 +228,7 @@ route.post("/updateWeekStartDate", auth, async (req, res) => {
     if (conn) conn.release(); // Release the database connection back to the pool
   }
 });
+
 route.post("/updateIsSuccess", auth, async (req, res) => {
   let conn;
   const { uid, tid, week, day } = req.body;
