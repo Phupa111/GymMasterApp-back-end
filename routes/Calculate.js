@@ -196,7 +196,7 @@ route.post("/getDayOfExercise", auth, async (req, res) => {
   }
 });
 
-route.post("/getDataUserAndBodyFat", auth, async (req, res) => {
+route.post("/getDataUserAndBodyFat",auth ,async (req, res) => {
   const { uid } = req.body;
   let conn;
   let bmi = 0;
@@ -213,10 +213,8 @@ route.post("/getDataUserAndBodyFat", auth, async (req, res) => {
             SELECT MAX(data_progress)
             FROM Progress
             WHERE Progress.uid = User.uid
-        )
-        AND Progress.weight IS NOT NULL
-        ORDER BY data_progress DESC
-        LIMIT 1`,
+            AND Progress.weight IS NOT NULL
+        )`,
       [uid]
     );
 
