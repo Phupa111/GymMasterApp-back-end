@@ -62,25 +62,41 @@ route.post("/disableUser", auth, async (req, res) => {
   }
 });
 
-route.post("/disableUser", auth, async (req, res) => {
-  const { isDisbel, uid } = req.body;
-
-  if (!uid) {
-    return res.status(400).json({ message: "User ID is required" });
-  }
-
-  const query = "UPDATE User SET isDisbel  = ? WHERE uid = ?";
+route.post("/updateDaySucess", async (req, res) => {
+  const { uid } = req.body; // Extract uid from the request body
+  let conn;
 
   try {
-    // Use the connection pool to execute the query
-    const conn = await pool.getConnection(); // Get a connection from the pool
-    await conn.query(query, [isDisbel, uid]); // Execute the query
-    conn.release(); // Release the connection back to the pool
+    conn = await pool.getConnection();
 
-    res.status(200).json({ message: "User disabled successfully" });
-  } catch (error) {
-    console.error("Error disabling user:", error);
-    res.status(500).json({ message: "Internal server error" });
+    // Update the day_suscess_exerice column by incrementing its value by 1
+    const sql = `UPDATE User 
+                 SET day_suscess_exerice = day_suscess_exerice + 1 
+                 WHERE uid = ?`;
+
+    const result = await conn.query(sql, [uid]);
+
+    // Convert BigInt to string in the result
+    const resultStringified = JSON.parse(
+      JSON.stringify(result, (key, value) =>
+        typeof value === "bigint" ? value.toString() : value
+      )
+    );
+
+    res.status(200).json({
+      success: true,
+      message: "User's day_suscess_exerice updated successfully",
+      result: resultStringified,
+    });
+  } catch (err) {
+    console.error("Error updating day_suscess_exerice:", err);
+    res.status(500).json({
+      success: false,
+      message: "Error updating day_suscess_exerice",
+      error: err.message,
+    });
+  } finally {
+    if (conn) conn.release(); // Release the connection back to the pool
   }
 });
 
