@@ -117,12 +117,12 @@ route.post("/updateWeigth", auth, async (req, res) => {
   }
 });
 
-route.get('/GetProgressUser/:uid',auth ,async (req, res)=>{
+route.get('/GetProgressUser/:uid' ,async (req, res)=>{
   let conn;
   const uid = req.params.uid;
   try {
     conn = await pool.getConnection();
-    const sql =`SELECT Progress.uid, Progress.weight, Progress.picture, Progress.data_progress
+    const sql =`SELECT Progress.pid, Progress.uid, Progress.weight, Progress.picture, Progress.data_progress
                 FROM Progress
                 WHERE Progress.uid = ?
                 AND Progress.picture IS NOT NULL`;
@@ -135,8 +135,33 @@ route.get('/GetProgressUser/:uid',auth ,async (req, res)=>{
   } catch (error) {
     console.log("Error to request: ",error);
     res.status(500).json({error:"Failed to Request "+error})
+  }finally {
+    if (conn) conn.release();
   }
 });
+
+route.post('/deleteImageProgress',auth ,async(req, res)=>{
+  const {uid,pid} = req.body;
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    const deleteImageSql = `DELETE FROM Progress 
+                          WHERE Progress.pid = ?
+                          AND Progress.uid = ?`;
+    const result = conn.query(deleteImageSql,[pid,uid]);
+
+
+      console.log("Image deleted successfully");
+      console.log(result);
+      res.status(200).json(1);
+    
+  } catch (error) {
+    res.status(500).json({ error: "Failed to delete" });
+  } finally {
+    if (conn) conn.release();
+  }
+}
+);
 
 
 module.exports = route;
