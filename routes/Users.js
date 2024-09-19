@@ -18,19 +18,69 @@ const pool = mariadb.createPool({
 });
 
 route.get("/getAllUsers", auth, async (req, res) => {
+  const { isDisble, search = "" } = req.query; // Extract the search term from the query params
   let conn;
   try {
     conn = await pool.getConnection();
-    const rows = await conn.query("SELECT * FROM User");
-    console.log(rows);
-    res.status(200).send(rows);
+
+    // Adjust the SQL query to handle the LIKE search properly
+    const rows = await conn.query(
+      "SELECT * FROM User WHERE isDisbel = ? AND role = 1 AND username LIKE ?",
+      [isDisble, `%${search || ""}%`] // Bind the isDisbel value and the search string with wildcards
+    );
+
+    res.status(200).json(rows); // Send the result as JSON
   } catch (error) {
-    console.error(error);
+    console.error("Error fetching users:", error);
     res.status(500).json({ error: "Internal Server Error" });
   } finally {
     if (conn) {
       conn.release(); // Release the database connection back to the pool
     }
+  }
+});
+
+route.post("/disableUser", auth, async (req, res) => {
+  const { isDisbel, uid } = req.body;
+
+  if (!uid) {
+    return res.status(400).json({ message: "User ID is required" });
+  }
+
+  const query = "UPDATE User SET isDisbel  = ? WHERE uid = ?";
+
+  try {
+    // Use the connection pool to execute the query
+    const conn = await pool.getConnection(); // Get a connection from the pool
+    await conn.query(query, [isDisbel, uid]); // Execute the query
+    conn.release(); // Release the connection back to the pool
+
+    res.status(200).json({ message: "User disabled successfully" });
+  } catch (error) {
+    console.error("Error disabling user:", error);
+    res.status(500).json({ message: "Internal server error" });
+  }
+});
+
+route.post("/disableUser", auth, async (req, res) => {
+  const { isDisbel, uid } = req.body;
+
+  if (!uid) {
+    return res.status(400).json({ message: "User ID is required" });
+  }
+
+  const query = "UPDATE User SET isDisbel  = ? WHERE uid = ?";
+
+  try {
+    // Use the connection pool to execute the query
+    const conn = await pool.getConnection(); // Get a connection from the pool
+    await conn.query(query, [isDisbel, uid]); // Execute the query
+    conn.release(); // Release the connection back to the pool
+
+    res.status(200).json({ message: "User disabled successfully" });
+  } catch (error) {
+    console.error("Error disabling user:", error);
+    res.status(500).json({ message: "Internal server error" });
   }
 });
 
