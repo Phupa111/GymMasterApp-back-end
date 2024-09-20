@@ -214,6 +214,42 @@ route.post("/getExercisesInTabel", auth, async (req, res) => {
   }
 });
 
+route.post("/UpdateExercisesInTabel", async (req, res) => {
+  const { set, rep, cpid } = req.body; // Expecting set, rep, and cpid in request body
+
+  // Input validation
+  if (!set || !rep || !cpid) {
+    return res.status(400).json({ error: "Missing required fields" });
+  }
+
+  try {
+    // Get a connection from the pool
+    const conn = await pool.getConnection();
+
+    // SQL query for updating
+    const query = "UPDATE Coures_ex_post SET `set` = ?, rep = ? WHERE cpid = ?";
+    const values = [set, rep, cpid];
+
+    // Execute query
+    const result = await conn.query(query, values);
+
+    // Release connection back to the pool
+    conn.release();
+
+    // Check if any rows were affected (i.e., updated)
+    if (result.affectedRows === 0) {
+      return res
+        .status(404)
+        .json({ error: "No record found with the provided cpid" });
+    }
+
+    res.json({ message: "Exercise updated successfully" });
+  } catch (error) {
+    // Return a 500 error on any exceptions
+    res.status(500).json({ error: "Database error", details: error.message });
+  }
+});
+
 route.post("/addExPosttoTabel", auth, async (req, res) => {
   const { tid, eid, dayNum, set, rep } = req.body;
   let conn;
