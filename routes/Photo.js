@@ -30,7 +30,7 @@ route.post('/uploadImage',upload.single('file'),auth,async(req, res)=>{
       
       conn = await pool.getConnection();
       const sql = `UPDATE User SET User.profile_pic = ? WHERE User.uid = ?`;
-      const result = conn.query(sql,[imageURL,uid]);
+      const result = await conn.query(sql,[imageURL,uid]);
 
       
         res.status(200).json(imageURL);
@@ -72,7 +72,7 @@ route.post('/insertProgress',upload.single('file'), auth, async(req, res)=>{
      
       conn = await pool.getConnection();
       
-      const result = conn.query(sql,fillInsert);
+      const result = await conn.query(sql,fillInsert);
 
       
         res.status(200).json(imageURL);
