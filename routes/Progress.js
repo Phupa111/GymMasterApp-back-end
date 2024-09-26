@@ -117,7 +117,7 @@ route.post("/updateWeigth", auth, async (req, res) => {
   }
 });
 
-route.get('/GetProgressUser/:uid' ,async (req, res)=>{
+route.get('/GetProgressUser/:uid',auth ,async (req, res)=>{
   let conn;
   const uid = req.params.uid;
   try {
@@ -148,7 +148,7 @@ route.post('/deleteImageProgress',auth ,async(req, res)=>{
     const deleteImageSql = `DELETE FROM Progress 
                           WHERE Progress.pid = ?
                           AND Progress.uid = ?`;
-    const result = conn.query(deleteImageSql,[pid,uid]);
+    const result =await conn.query(deleteImageSql,[pid,uid]);
 
 
       console.log("Image deleted successfully");
@@ -160,8 +160,111 @@ route.post('/deleteImageProgress',auth ,async(req, res)=>{
   } finally {
     if (conn) conn.release();
   }
-}
-);
+});
+
+route.post('/setBefore' ,async (req, res)=>{
+  const {uid,pid} = req.body;
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    
+    const checkBefore = `SELECT Progress.pid, Progress.uid, Progress.isBefore
+                         FROM Progress
+                         WHERE uid = ?
+                         AND Progress.isBefore IS NOT NULL`;
+    const record = await conn.query(checkBefore, [uid]);
+
+    // กรณีที่มีเรคอร์ดที่ `isBefore` อยู่แล้ว
+    if (record.length > 0) {
+      // รีเซ็ตค่า `isBefore` ของเรคอร์ดนั้นให้เป็น NULL
+      const resetBeforeQuery = `UPDATE Progress
+                                SET isBefore = NULL
+                                WHERE uid = ?
+                                AND isBefore = 1`;
+      await conn.query(resetBeforeQuery, [uid]);
+
+      // ตั้งค่า `isBefore` เป็น 1 ในเรคอร์ดใหม่
+      const setBeforeQuery = `UPDATE Progress 
+                              SET isBefore = 1 
+                              WHERE uid = ?
+                              AND pid = ?`;
+      await conn.query(setBeforeQuery, [uid, pid]);
+
+      res.status(200).json({ message: 'isBefore has been reset and set successfully.' });
+    } else {
+      // กรณีที่ไม่มีเรคอร์ด `isBefore` อยู่แล้ว
+      const setBeforeQuery = `UPDATE Progress 
+                              SET isBefore = 1 
+                              WHERE uid = ?
+                              AND pid = ?`;
+      await conn.query(setBeforeQuery, [uid, pid]);
+
+      res.status(200).json({ message: 'isBefore has been set successfully.' });
+    }
+  } catch (error) {
+    console.log("Error to request: ",error);
+    res.status(500).json({error:"Failed to set image to Beofre => ",error});
+  }
+  finally{
+    if(conn) conn.release();
+  }
+});
+
+route.get('/getLatestProgress/:uid', async (req,res)=>{
+  let conn;
+  const uid = req.params.uid;
+
+  try {
+    conn = await pool.getConnection();
+    const sql = `SELECT Progress.pid, Progress.uid, Progress.picture, Progress.data_progress
+                FROM Progress
+                Where uid = ?
+								AND Progress.data_progress = (
+                        SELECT MAX(data_progress)
+                        FROM Progress
+                        WHERE Progress.uid = ?
+                    )
+                AND Progress.picture IS NOT NULL`;
+
+    const result = await conn.query(sql,[uid,uid]);
+
+    if (result.length > 0) {
+      console.log("send complete1");
+      res.status(200).json(result);
+    } else {
+      res.status(400).json();
+    }
+  } catch (error) {
+    console.log("Error to request: ",error);
+    res.status(500).json({error:"Failed to get latest image => ",error});
+  } finally {
+    if(conn) conn.release();
+  }
+});
+
+route.get('/getBeforeProgress/:uid',async(req,res)=>{
+  let conn;
+  const uid = req.params.uid;
+  try {
+    conn = await pool.getConnection();
+    const sql = `SELECT Progress.pid, Progress.uid, Progress.isBefore, Progress.picture, Progress.data_progress
+                  FROM Progress
+                  WHERE uid = ?
+                  AND Progress.isBefore = 1`;
+
+    const result = await conn.query(sql,[uid]);
+    if (result.length > 0) {
+      console.log("send complete2");
+      res.status(200).json(result);
+    } else {
+      res.status(400).json();
+    }
+  } catch (error) {
+    
+  } finally {
+    if(conn) conn.release();
+  }
+});
 
 
 module.exports = route;
