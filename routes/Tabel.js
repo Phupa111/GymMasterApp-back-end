@@ -523,4 +523,46 @@ route.get("/getAllEnnabelUserTabel", auth, async (req, res) => {
   }
 });
 
+route.post('/updateCourse' ,auth ,async(req, res)=>{
+  const {tid,tableName,times} = req.body;
+  let sql;
+  let fill;
+  let conn;
+  try {
+    if (!tableName) {
+      console.log('Table Name : '+tableName);
+      sql =`UPDATE Training_Couser 
+            SET Training_Couser.times = ? 
+            WHERE Training_Couser.tid = ?`;
+      fill = [times,tid];
+    }else if(!times){
+      console.log('times : '+times);
+      sql = `UPDATE Training_Couser 
+            SET Training_Couser.couserName = ? 
+            WHERE Training_Couser.tid = ? `;
+      fill = [tableName,tid];
+    }else{
+      console.log('times : '+times);
+      console.log('Table Name : '+tableName);
+      sql =`UPDATE Training_Couser 
+            SET Training_Couser.times = ?,Training_Couser.couserName = ?  
+            WHERE Training_Couser.tid = ?`;
+      fill = [times,tableName,tid];
+    }
+
+    conn = await pool.getConnection();
+    const result = await conn.query(sql,fill);
+    if (result.affectedRows > 0) {
+      console.log("affected : " + result.affectedRows);
+    }
+    console.log("length : " +result.length);
+
+    res.status(200).json({response : "update Course Successfully"});
+  } catch (error) {
+    console.error("Error to update course: ", error);
+    res.status(500).json({ error: "Internal Server Error" });
+  } finally {
+    if (conn) conn.release(); // Release the database connection back to the pool
+  }
+});
 module.exports = route;

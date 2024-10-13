@@ -15,7 +15,7 @@ const pool = mariadb.createPool({
   connectionLimit: 5,
 });
 
-route.post("/getDayOfExercise", auth, async (req, res) => {
+route.post("/getDayOfExercise",  async (req, res) => {
   const { uid } = req.body;
   let conn;
   let bmr = 0;
@@ -126,6 +126,7 @@ route.post("/getDayOfExercise", auth, async (req, res) => {
           "INNER JOIN ( " +
           "SELECT uid, MAX(data_progress) AS max_date " +
           "FROM Progress " +
+          "WHERE Progress.weight IS NOT NULL "+
           "GROUP BY uid " +
           ") AS MaxProgress ON Progress.uid = MaxProgress.uid AND Progress.data_progress = MaxProgress.max_date " +
           ") AS LatestProgress ON User.uid = LatestProgress.uid " +

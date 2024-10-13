@@ -139,7 +139,7 @@ route.post("/login", async (req, res) => {
   }
 });
 
-route.post("/getDataUserById", async (req, res) => {
+route.post("/getDataUserById",auth ,async (req, res) => {
   const { uid } = req.body;
   let conn;
   try {

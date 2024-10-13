@@ -57,6 +57,16 @@ route.post('/insertProgress',upload.single('file'), auth, async(req, res)=>{
         return res.status(400).json({ error: 'No file uploaded' });
       } 
       
+      // ตรวจสอบข้อมูลไฟล์ที่ได้รับ
+      console.log('File Metadata:', req.file);
+      console.log('Buffer Length:', req.file.buffer.length);
+      console.log('File Type:', req.file.mimetype);
+
+      // ตรวจสอบว่าประเภทไฟล์เป็น image หรือไม่
+      if (!req.file.mimetype.startsWith('image/')) {
+        return res.status(400).json({ error: 'Uploaded file is not an image' });
+      }
+
       //Resize data Image
       const resizedImageBuffer = await sharp(req.file.buffer).jpeg({quality: 65}).toBuffer();
       const imageURL  = await firebaseUploadImageProgress({...req.file,buffer:resizedImageBuffer});
@@ -73,13 +83,12 @@ route.post('/insertProgress',upload.single('file'), auth, async(req, res)=>{
       conn = await pool.getConnection();
       
       const result = await conn.query(sql,fillInsert);
-
       
         res.status(200).json(imageURL);
         console.log('Data updated successfully!');
     } catch (error) {
       console.error("Error uploading file:", error);
-        res.status(500).json({ error: "Failed to upload file" });
+        res.status(500).json({ error: "Failed to upload file "+ error });
     }finally{
       if(conn){
         conn.release();
