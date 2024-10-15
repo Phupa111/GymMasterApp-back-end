@@ -16,6 +16,7 @@ const exercisePostureRoute = require("./routes/Exerices_Post.js");
 const enabledCouserRoute = require("./routes/User_Enabel_Course.js");
 const calculateRoute = require("./routes/Calculate.js");
 const adminRoute = require("./routes/Admin.js"); 
+const equipmentRoute = require("./routes/Equipment.js");
 
 app.use("/user", usersRoute);
 app.use("/photo", photoRoute);
@@ -25,6 +26,7 @@ app.use("/exPost", exercisePostureRoute);
 app.use("/enCouser", enabledCouserRoute);
 app.use("/calculate", calculateRoute);
 app.use("/admin",adminRoute);
+app.use("/equipment",equipmentRoute);
 
 app.get("/hello", (req, res) => {
   res.send("hello world");
